@@ -20,6 +20,7 @@ const loadMoreBtn = document.querySelector(".load-more");
 let currentQuery = "";
 let currentPage = 1;
 
+const PER_PAGE = 15;
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -48,12 +49,14 @@ form.addEventListener("submit", async (e) => {
         
         createGallery(data.hits);
         form.reset();
-        const totalPages = Math.ceil(data.totalHits / 15);
+        
+        const totalPages = Math.ceil(data.totalHits / PER_PAGE);
 
         if (currentPage < totalPages) {
             showLoadMoreButton();
         }
-        else {            hideLoadMoreButton();
+        else {
+            hideLoadMoreButton();
         }
 
     } catch (error) {
@@ -67,37 +70,42 @@ form.addEventListener("submit", async (e) => {
    
   
 loadMoreBtn.addEventListener("click", async () => {
+    loadMoreBtn.disabled = true;
     currentPage += 1;
-
+    
     showLoader();
 
     try {
-        const data = await getImagesByQuery(
-            currentQuery,
-            currentPage
-        );
+        const data = await getImagesByQuery(currentQuery,currentPage);
 
         createGallery(data.hits);
-        const totalPages = Math.ceil(data.totalHits / 15);
+        
+        const totalPages = Math.ceil(data.totalHits / PER_PAGE);
 
         if (currentPage >= totalPages) {
             hideLoadMoreButton();
             iziToast.info({
                 message: "We're sorry, but you've reached the end of search results.",
             });
+        } else {
+            showLoadMoreButton();
         }
-const card = document.querySelector(".gallery-item");
-const cardHeight = card.getBoundingClientRect().height;
+
+        const card = document.querySelector(".gallery-item");
+        if (card) {
+            const cardHeight = card.getBoundingClientRect().height;
 
 window.scrollBy({
   top: cardHeight * 2,
   behavior: "smooth",
 });
+}
 } catch (error) {
     iziToast.error({
       message: "Something went wrong. Please try again later.",
     });
   } finally {
-    hideLoader();
+        hideLoader();
+        loadMoreBtn.disabled = false;
   }
 });
